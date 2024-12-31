@@ -2,8 +2,15 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, Home, Send, Facebook, Instagram, Linkedin } from 'lucide-react';
 
-const Contact = () => {
-  const [formData, setFormData] = useState({
+interface FormData {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+}
+
+const Contact: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     phone: '',
@@ -17,15 +24,34 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Add logic for form submission (API integration or email service)
+
+    try {
+      const response = await fetch('http://localhost:5000/save-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        alert('Form data saved successfully!');
+        setFormData({ name: '', email: '', phone: '', message: '' }); // Reset form
+      } else {
+        // Handle non-2xx status codes
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        alert(`Failed to save form data: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error: any) {
+      // Network or server errors
+      console.error('Error:', error);
+      alert('An error occurred while saving the form data. Please try again later.');
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-gray-800 via-blue-800 to-gray-900 text-white flex items-center justify-center py-12 px-6">
-      {/* Main Container */}
       <div className="flex flex-col lg:flex-row lg:space-x-16 max-w-7xl w-full">
         {/* Left Section */}
         <motion.div
@@ -135,7 +161,7 @@ const Contact = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full border-b-2 focus:outline-none focus:border-teal-400 text-gray-900 py-2"
-                  placeholder="Your Email"
+                  placeholder="Your Email Address"
                   required
                 />
               </div>
@@ -146,7 +172,7 @@ const Contact = () => {
                   Phone Number
                 </label>
                 <input
-                  type="tel"
+                  type="text"
                   id="phone"
                   name="phone"
                   value={formData.phone}
@@ -159,30 +185,27 @@ const Contact = () => {
               {/* Message */}
               <div>
                 <label htmlFor="message" className="block text-gray-700 font-medium mb-1">
-                  Message
+                  Your Message
                 </label>
                 <textarea
                   id="message"
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
-                  rows={4}
                   className="w-full border-b-2 focus:outline-none focus:border-teal-400 text-gray-900 py-2"
                   placeholder="Your Message"
+                  rows={4}
                   required
-                ></textarea>
+                />
               </div>
 
-              {/* Submit Button */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 type="submit"
-                className="w-full bg-teal-400 hover:bg-teal-500 text-white font-semibold py-3 rounded transition duration-200 flex justify-center items-center"
+                className="bg-teal-400 text-white py-2 px-4 rounded-full w-full hover:bg-teal-500 transition"
               >
-                <Send className="h-5 w-5 mr-2" />
                 Send Message
-              </motion.button>
+                <Send className="inline-block ml-2" />
+              </button>
             </form>
           </div>
         </motion.div>
